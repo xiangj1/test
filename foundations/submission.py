@@ -99,13 +99,13 @@ def mutate_sentences(sentence: str) -> List[str]:
             result.append(' '.join(current))
             return
 
-        lastTried = None
+        visited = set()
         for nextWord in pairDict[current[-1]]:
-            if(lastTried == nextWord):
+            if(nextWord in visited):
                 continue
             current.append(nextWord)
             backtracking()
-            lastTried = current.pop()
+            visited.add(current.pop())
 
     for key in pairDict:
         current.append(key)
