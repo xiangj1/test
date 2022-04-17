@@ -207,11 +207,21 @@ def kmeans(examples: List[Dict[str, float]], K: int,
     assignments: List[int] = [None for _ in examples]
     totalCost = 0
 
-    distanceCache = defaultdict(float)
+    distanceCache = dict()
     def distance(i, j):
         f1 = examples[i]
         f2 = centers[j]
-        return dotProduct(f1, f1) + dotProduct(f2, f2) - 2*dotProduct(f1, f2)
+
+        f1Key = 'example-{}'.format(i)
+        f2Key = 'center-{}'.format(j)
+
+        if(f1Key not in distanceCache):
+            distanceCache[f1Key] = dotProduct(f1, f1)
+        
+        # if(f2Key not in distanceCache):
+        distanceCache[f2Key] = dotProduct(f2, f2)
+
+        return distanceCache[f1Key] + distanceCache[f2Key] - 2*dotProduct(f1, f2)
 
     def initCenters():
         centers.clear()
