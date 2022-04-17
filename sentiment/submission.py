@@ -237,11 +237,14 @@ def kmeans(examples: List[Dict[str, float]], K: int,
                 minCenter = i
         return minCenter
 
-    def updateCenter(center: Dict[str, float], examples: List[Dict[str, float]]):
+    def updateCenter(center_i, example_is):
+        center = centers[center_i]
+
         count = defaultdict(int)
         avgDict = defaultdict(float)
 
-        for example in examples:
+        for example_i in example_is:
+            example = examples[example_i]
             for key in example:
                 count[key] += 1
                 avgDict[key] += example[key]
@@ -249,7 +252,14 @@ def kmeans(examples: List[Dict[str, float]], K: int,
         for key in count:
             avgDict[key] /= count[key]
 
-        center.update(avgDict)
+        update = False
+        for key in avgDict:
+            if(key not in center or avgDict[key] != center[key]):
+                update = True
+                center[key] = avgDict[key]
+        
+        if(update):
+            distanceCache[f'center-{center_i}'] = dotProduct(center, center)
 
     def updateCenters():
         totalCost = 0
@@ -260,11 +270,11 @@ def kmeans(examples: List[Dict[str, float]], K: int,
             example = examples[i]
 
             totalCost += distance(i, center_i)
-            centerDict[center_i].append(example)
+            centerDict[center_i].append(i)
 
         for center_i in centerDict:
             center = centers[center_i]
-            updateCenter(center, centerDict[center_i])
+            updateCenter(center_i, centerDict[center_i])
         
         return update
             
