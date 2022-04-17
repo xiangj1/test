@@ -1,5 +1,9 @@
 #!/usr/bin/python
 
+from audioop import avg
+from calendar import c
+from collections import defaultdict
+from email.policy import default
 import random
 from typing import Callable, Dict, List, Tuple, TypeVar
 
@@ -26,7 +30,14 @@ def extractWordFeatures(x: str) -> FeatureVector:
     Example: "I am what I am" --> {'I': 2, 'am': 2, 'what': 1}
     """
     # BEGIN_YOUR_CODE (our solution is 4 lines of code, but don't worry if you deviate from this)
-    raise Exception("Not implemented yet")
+    result = dict()
+    
+    for word in x.split():
+        if(not result.get(word)):
+            result[word] = 0
+        result[word] += 1
+
+    return result
     # END_YOUR_CODE
 
 
@@ -57,7 +68,25 @@ def learnPredictor(trainExamples: List[Tuple[T, int]],
     weights = {}  # feature => weight
 
     # BEGIN_YOUR_CODE (our solution is 13 lines of code, but don't worry if you deviate from this)
-    raise Exception("Not implemented yet")
+
+    def predictor(x):
+        if(dotProduct(weights, featureExtractor(x)) >= 0):
+            return 1
+        return -1
+
+    for _ in range(numEpochs):
+        for x, y in trainExamples:
+            features = featureExtractor(x)
+            
+            if(dotProduct(weights, features)*y >= 1):
+                continue
+
+            # loss = features*-y
+            increment(weights, -eta*-y, features)
+        
+        # print('Traning loss', evaluatePredictor(trainExamples, predictor))
+        # print('validation loss', evaluatePredictor(validationExamples, predictor))
+
     # END_YOUR_CODE
     return weights
 
@@ -82,7 +111,14 @@ def generateDataset(numExamples: int, weights: WeightVector) -> List[Example]:
     # Note that the weight vector can be arbitrary during testing.
     def generateExample() -> Tuple[Dict[str, int], int]:
         # BEGIN_YOUR_CODE (our solution is 3 lines of code, but don't worry if you deviate from this)
-        raise Exception("Not implemented yet")
+        phi = {}
+        for key in weights:
+            phi[key] = random.random()
+        
+        y = 1
+        if(dotProduct(weights, phi) < 0):
+            y = 0
+
         # END_YOUR_CODE
         return phi, y
 
@@ -102,7 +138,16 @@ def extractCharacterFeatures(n: int) -> Callable[[str], FeatureVector]:
     '''
     def extract(x: str) -> Dict[str, int]:
         # BEGIN_YOUR_CODE (our solution is 6 lines of code, but don't worry if you deviate from this)
-        raise Exception("Not implemented yet")
+        x = x.replace(' ', '')
+        result = dict()
+        for i in range(len(x)-n+1):
+            substr = x[i:i+n]
+            if(substr not in result):
+                result[substr] = 0
+            
+            result[substr] += 1
+
+        return result
         # END_YOUR_CODE
 
     return extract
@@ -157,5 +202,79 @@ def kmeans(examples: List[Dict[str, float]], K: int,
             final reconstruction loss)
     '''
     # BEGIN_YOUR_CODE (our solution is 28 lines of code, but don't worry if you deviate from this)
-    raise Exception("Not implemented yet")
+    
+    centers: List[float] = []
+    assignments: List[int] = [None for _ in examples]
+    totalCost = 0
+
+    distanceCache = defaultdict(float)
+    def distance(f1: Dict[str, float], f2: Dict[str, float]):
+        return dotProduct(f1, f1) + dotProduct(f2, f2) - 2*dotProduct(f1, f2)
+
+    def initCenters():
+        centers.clear()
+        while(len(centers) < K):
+            i = random.randint(0, len(examples)-1)
+            if(examples[i] not in centers):
+                centers.append(examples[i].copy())
+    
+    def assignCenter(v: Dict[str, float]):
+        minCenter = 0
+        for i in range(1, len(centers)):
+            if(distance(v, centers[i]) < distance(v, centers[minCenter])):
+                minCenter = i
+        return minCenter
+
+    def updateCenter(center: Dict[str, float], examples: List[Dict[str, float]]):
+        count = defaultdict(int)
+        avgDict = defaultdict(float)
+
+        for example in examples:
+            for key in example:
+                count[key] += 1
+                avgDict[key] += example[key]
+
+        for key in count:
+            avgDict[key] /= count[key]
+
+        center.update(avgDict)
+
+    def updateCenters():
+        totalCost = 0
+        centerDict = defaultdict(list)
+
+        for i in range(len(assignments)):
+            center_i = assignments[i]
+            example = examples[i]
+
+            totalCost += distance(example, centers[center_i])
+            centerDict[center_i].append(example)
+
+        for center_i in centerDict:
+            center = centers[center_i]
+            updateCenter(center, centerDict[center_i])
+        
+        return update
+            
+
+    initCenters()
+    for _ in range(maxEpochs):
+        totalCost = 0
+        update = False
+        for i in range(0, len(examples)):
+            example = examples[i]
+            newCenter_i = assignCenter(example)
+            if(assignments[i] != newCenter_i):
+                update = True
+            assignments[i] = newCenter_i
+
+            totalCost += distance(example, centers[newCenter_i])
+
+        if not update:
+            break
+
+        updateCenters()
+    
+    return centers, assignments, totalCost
+
     # END_YOUR_CODE
