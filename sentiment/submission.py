@@ -203,23 +203,23 @@ def kmeans(examples: List[Dict[str, float]], K: int,
     '''
     # BEGIN_YOUR_CODE (our solution is 28 lines of code, but don't worry if you deviate from this)
     
-    centers: List[float] = []
+    centers: List[float] = [sample.copy() for sample in random.sample(examples,K)]
     assignments: List[int] = [None for _ in examples]
     totalCost = 0
 
     distanceCache = dict()
-    def distance(i, j):
-        f1 = examples[i]
-        f2 = centers[j]
+    def distance(example_i, center_i):
+        f1 = examples[example_i]
+        f2 = centers[center_i]
 
-        f1Key = 'example-{}'.format(i)
-        f2Key = 'center-{}'.format(j)
+        f1Key = 'example-{}'.format(example_i)
+        f2Key = 'center-{}'.format(center_i)
 
         if(f1Key not in distanceCache):
             distanceCache[f1Key] = dotProduct(f1, f1)
         
-        # if(f2Key not in distanceCache):
-        distanceCache[f2Key] = dotProduct(f2, f2)
+        if(f2Key not in distanceCache):
+            distanceCache[f2Key] = dotProduct(f2, f2)
 
         return distanceCache[f1Key] + distanceCache[f2Key] - 2*dotProduct(f1, f2)
 
@@ -231,11 +231,17 @@ def kmeans(examples: List[Dict[str, float]], K: int,
                 centers.append(examples[i].copy())
     
     def assignCenter(example_i):
-        minCenter = 0
+        result = {
+            'distance': distance(example_i, 0),
+            'center_i': 0
+        }
         for i in range(1, len(centers)):
-            if(distance(example_i, i) < distance(example_i, minCenter)):
-                minCenter = i
-        return minCenter
+            newDistance = distance(example_i, i)
+            if(newDistance < result['distance']):
+                result['distance'] = newDistance
+                result['center_i'] = i
+        
+        return result['distance'], result['center_i']
 
     def updateCenter(center_i, example_is):
         center = centers[center_i]
@@ -279,18 +285,18 @@ def kmeans(examples: List[Dict[str, float]], K: int,
         return update
             
 
-    initCenters()
+    # initCenters()
     for _ in range(maxEpochs):
         totalCost = 0
         update = False
         for i in range(0, len(examples)):
             example = examples[i]
-            newCenter_i = assignCenter(i)
+            newDistance, newCenter_i = assignCenter(i)
             if(assignments[i] != newCenter_i):
                 update = True
             assignments[i] = newCenter_i
 
-            totalCost += distance(i, newCenter_i)
+            totalCost += newDistance
 
         if not update:
             break
