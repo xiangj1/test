@@ -208,7 +208,9 @@ def kmeans(examples: List[Dict[str, float]], K: int,
     totalCost = 0
 
     distanceCache = defaultdict(float)
-    def distance(f1: Dict[str, float], f2: Dict[str, float]):
+    def distance(i, j):
+        f1 = examples[i]
+        f2 = centers[j]
         return dotProduct(f1, f1) + dotProduct(f2, f2) - 2*dotProduct(f1, f2)
 
     def initCenters():
@@ -218,10 +220,10 @@ def kmeans(examples: List[Dict[str, float]], K: int,
             if(examples[i] not in centers):
                 centers.append(examples[i].copy())
     
-    def assignCenter(v: Dict[str, float]):
+    def assignCenter(example_i):
         minCenter = 0
         for i in range(1, len(centers)):
-            if(distance(v, centers[i]) < distance(v, centers[minCenter])):
+            if(distance(example_i, i) < distance(example_i, minCenter)):
                 minCenter = i
         return minCenter
 
@@ -247,7 +249,7 @@ def kmeans(examples: List[Dict[str, float]], K: int,
             center_i = assignments[i]
             example = examples[i]
 
-            totalCost += distance(example, centers[center_i])
+            totalCost += distance(i, center_i)
             centerDict[center_i].append(example)
 
         for center_i in centerDict:
@@ -263,12 +265,12 @@ def kmeans(examples: List[Dict[str, float]], K: int,
         update = False
         for i in range(0, len(examples)):
             example = examples[i]
-            newCenter_i = assignCenter(example)
+            newCenter_i = assignCenter(i)
             if(assignments[i] != newCenter_i):
                 update = True
             assignments[i] = newCenter_i
 
-            totalCost += distance(example, centers[newCenter_i])
+            totalCost += distance(i, newCenter_i)
 
         if not update:
             break
