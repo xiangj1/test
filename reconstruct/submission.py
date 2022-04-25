@@ -99,17 +99,24 @@ class JointSegmentationInsertionProblem(util.SearchProblem):
 
     def startState(self):
         # BEGIN_YOUR_CODE (our solution is 1 line of code, but don't worry if you deviate from this)
-        raise Exception("Not implemented yet")
+        return (wordsegUtil.SENTENCE_BEGIN, 0)
         # END_YOUR_CODE
 
     def isEnd(self, state) -> bool:
         # BEGIN_YOUR_CODE (our solution is 2 lines of code, but don't worry if you deviate from this)
-        raise Exception("Not implemented yet")
+        return state[1] == len(self.query)
         # END_YOUR_CODE
 
     def succAndCost(self, state):
         # BEGIN_YOUR_CODE (our solution is 14 lines of code, but don't worry if you deviate from this)
-        raise Exception("Not implemented yet")
+        result = []
+        lastWord, start = state
+        for end in range(start, len(self.query)):
+            substr = self.query[start : end+1]
+            for word in self.possibleFills(substr):
+                result.append((word, (word, end+1), self.bigramCost(lastWord, word)))
+        
+        return result
         # END_YOUR_CODE
 
 
@@ -119,7 +126,9 @@ def segmentAndInsert(query: str, bigramCost: Callable[[str, str], float],
         return ''
 
     # BEGIN_YOUR_CODE (our solution is 4 lines of code, but don't worry if you deviate from this)
-    raise Exception("Not implemented yet")
+    ucs = util.UniformCostSearch(verbose=0)
+    ucs.solve(JointSegmentationInsertionProblem(query, bigramCost, possibleFills))
+    return ' '.join(ucs.actions)
     # END_YOUR_CODE
 
 
