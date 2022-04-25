@@ -1,4 +1,4 @@
-from typing import Callable, List, Set
+from typing import Callable, List, Set, Tuple
 
 import shell
 import util
@@ -58,24 +58,32 @@ class VowelInsertionProblem(util.SearchProblem):
 
     def startState(self):
         # BEGIN_YOUR_CODE (our solution is 1 line of code, but don't worry if you deviate from this)
-        raise Exception("Not implemented yet")
+        return (wordsegUtil.SENTENCE_BEGIN, 0)
         # END_YOUR_CODE
 
-    def isEnd(self, state) -> bool:
+    def isEnd(self, state: Tuple[str, int]) -> bool:
         # BEGIN_YOUR_CODE (our solution is 2 lines of code, but don't worry if you deviate from this)
-        raise Exception("Not implemented yet")
+        return state[1] == len(self.queryWords)
         # END_YOUR_CODE
 
     def succAndCost(self, state):
         # BEGIN_YOUR_CODE (our solution is 8 lines of code, but don't worry if you deviate from this)
-        raise Exception("Not implemented yet")
+        result = []
+        lastWord, index = state
+        words = self.possibleFills(self.queryWords[index])
+        words.add(self.queryWords[index])            
+        for word in words:
+            result.append((word, (word, index+1), self.bigramCost(lastWord, word)))
+        return result
         # END_YOUR_CODE
 
 
 def insertVowels(queryWords: List[str], bigramCost: Callable[[str, str], float],
         possibleFills: Callable[[str], Set[str]]) -> str:
     # BEGIN_YOUR_CODE (our solution is 3 lines of code, but don't worry if you deviate from this)
-    raise Exception("Not implemented yet")
+    ucs = util.UniformCostSearch(verbose=0)
+    ucs.solve(VowelInsertionProblem(queryWords, bigramCost, possibleFills))
+    return ' '.join(ucs.actions)
     # END_YOUR_CODE
 
 
