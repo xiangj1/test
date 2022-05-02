@@ -1,3 +1,4 @@
+from itertools import count
 import util, math, random
 from collections import defaultdict
 from util import ValueIteration
@@ -51,7 +52,74 @@ class BlackjackMDP(util.MDP):
     # tuples in the same order.
     def succAndProbReward(self, state: Tuple, action: str) -> List[Tuple]:
         # BEGIN_YOUR_CODE (our solution is 38 lines of code, but don't worry if you deviate from this)
-        raise Exception("Not implemented yet")
+
+        def decreaseDeck(total, decks, i):
+            if(total > self.threshold):
+                return None
+            decks = list(decks)
+            decks[i] -= 1
+            for count in decks:
+                if count > 0:
+                    return tuple(decks)
+            return None
+     
+        def getNewStateReward(i):
+            newState = (
+                totalCardValueInHand + self.cardValues[i], 
+                None, 
+                decreaseDeck(totalCardValueInHand + self.cardValues[i], deckCardCounts, i)
+            )
+            reward = 0 if(newState[0] > self.threshold or newState[2] != None) else newState[0]
+            return newState, reward
+        
+        totalCardValueInHand, nextCardIndexIfPeeked, deckCardCounts = state
+        result = []
+
+        def takeAction():            
+            start, end = 0, len(self.cardValues)
+            if(nextCardIndexIfPeeked != None):
+                start, end = nextCardIndexIfPeeked, nextCardIndexIfPeeked+1
+                
+            states = []
+            for i in range(start, end):
+                if(deckCardCounts[i] == 0):
+                    continue
+
+                newState, reward = getNewStateReward(i)
+                states.append((newState, reward))
+            
+            prob = 1/len(states)
+            for newState, reward in states:
+                result.append((newState, prob, reward))
+
+        def peekAction():
+            if(nextCardIndexIfPeeked != None):
+                return
+
+            states = []
+            for i in range(len(self.cardValues)):
+                if(deckCardCounts[i] > 0):
+                    states.append(((totalCardValueInHand, i, deckCardCounts), -self.peekCost))
+            
+            prob = 1/len(states)
+            for newState, reward in states:
+                result.append((newState, prob, reward))
+
+        def quitAction():
+            reward = 0 if(totalCardValueInHand > self.threshold) else totalCardValueInHand
+            result.append(((totalCardValueInHand, None, None), 1, reward))
+
+        if deckCardCounts == None:
+            return result
+
+        if action == 'Take':
+            takeAction()
+        elif action == 'Peek':
+            peekAction()
+        elif action == 'Quit':
+            quitAction()
+        
+        return result        
         # END_YOUR_CODE
 
     def discount(self):
@@ -102,7 +170,16 @@ class QLearningAlgorithm(util.RLAlgorithm):
     # self.getQ() to compute the current estimate of the parameters.
     def incorporateFeedback(self, state: Tuple, action: Any, reward: int, newState: Tuple) -> None:
         # BEGIN_YOUR_CODE (our solution is 9 lines of code, but don't worry if you deviate from this)
-        raise Exception("Not implemented yet")
+        V = 0
+        if(newState != None):
+            for newAction in self.actions(newState):
+                V = max(self.getQ(newState, newAction), V)
+            
+        Q = self.getQ(state,action)
+
+        for key, feature in self.featureExtractor(state, action):
+            self.weights[key] -= self.getStepSize() * (Q - (reward + self.discount*V)) * feature
+
         # END_YOUR_CODE
 
 
@@ -172,7 +249,20 @@ def blackjackFeatureExtractor(state: Tuple, action: str) -> List[tuple]:
     total, nextCard, counts = state
 
     # BEGIN_YOUR_CODE (our solution is 7 lines of code, but don't worry if you deviate from this)
-    raise Exception("Not implemented yet")
+    features = []
+    features.append( (('total', total, action), 1) )
+
+    if(counts == None):
+        return features
+
+    counts = list(counts)
+    for i, count in enumerate(counts):
+        features.append( ((i, count, action), 1) )
+        counts[i] = 0 if counts[i] == 0 else 1
+            
+    features.append( (('bitmask', tuple(counts), action), 1) )
+        
+    return features
     # END_YOUR_CODE
 
 ############################################################
