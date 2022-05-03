@@ -62,15 +62,6 @@ class BlackjackMDP(util.MDP):
                 if count > 0:
                     return tuple(decks)
             return None
-     
-        def getNewStateReward(i):
-            newState = (
-                totalCardValueInHand + self.cardValues[i], 
-                None, 
-                decreaseDeck(totalCardValueInHand + self.cardValues[i], deckCardCounts, i)
-            )
-            reward = 0 if(newState[0] > self.threshold or newState[2] != None) else newState[0]
-            return newState, reward
         
         totalCardValueInHand, nextCardIndexIfPeeked, deckCardCounts = state
         result = []
@@ -80,30 +71,32 @@ class BlackjackMDP(util.MDP):
             if(nextCardIndexIfPeeked != None):
                 start, end = nextCardIndexIfPeeked, nextCardIndexIfPeeked+1
                 
-            states = []
             for i in range(start, end):
                 if(deckCardCounts[i] == 0):
                     continue
 
-                newState, reward = getNewStateReward(i)
-                states.append((newState, reward))
-            
-            prob = 1/len(states)
-            for newState, reward in states:
+                newState = (totalCardValueInHand + self.cardValues[i], None, 
+                    decreaseDeck(totalCardValueInHand + self.cardValues[i], deckCardCounts, i))
+                reward = 0 if(newState[0] > self.threshold or newState[2] != None) else newState[0]
+                prob = 1 if(nextCardIndexIfPeeked != None) else deckCardCounts[i]/sum(deckCardCounts)
+                
                 result.append((newState, prob, reward))
+            return
 
         def peekAction():
             if(nextCardIndexIfPeeked != None):
                 return
 
-            states = []
             for i in range(len(self.cardValues)):
                 if(deckCardCounts[i] > 0):
-                    states.append(((totalCardValueInHand, i, deckCardCounts), -self.peekCost))
+                    result.append((
+                        (totalCardValueInHand, i, deckCardCounts), 
+                        deckCardCounts[i]/sum(deckCardCounts), 
+                        -self.peekCost
+                    ))
             
-            prob = 1/len(states)
-            for newState, reward in states:
-                result.append((newState, prob, reward))
+            return
+            
 
         def quitAction():
             reward = 0 if(totalCardValueInHand > self.threshold) else totalCardValueInHand
