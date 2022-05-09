@@ -1,3 +1,4 @@
+from audioop import minmax
 from util import manhattanDistance
 from game import Directions
 import random, util
@@ -168,7 +169,31 @@ class MinimaxAgent(MultiAgentSearchAgent):
     """
 
     # BEGIN_YOUR_CODE (our solution is 20 lines of code, but don't worry if you deviate from this)
-    raise Exception("Not implemented yet")
+    
+    def minMax(state: GameState, depth: int, agentIndex: int):
+      agentIndex = agentIndex % state.getNumAgents()
+      
+      score = bestScore = state.getScore()
+      bestAction = Directions.STOP
+
+      nextActions = state.getLegalActions(agentIndex)
+      
+      if(depth == 0 or state.isWin() or state.isLose() or len(nextActions) == 0):
+        return (bestScore, bestAction)
+
+      func = max if agentIndex == 0 else min
+      depth += 1 if agentIndex == 0 else 0
+
+      for action in nextActions:
+        score = func(score, minMax(state.generateSuccessor(agentIndex, action), depth-1,  agentIndex+1)[0])
+        if(bestScore != score):
+          bestScore = score
+          bestAction = action
+          
+      return (score, action)
+      
+    return minMax(gameState, self.depth, 0)[1]
+
     # END_YOUR_CODE
 
 ######################################################################################

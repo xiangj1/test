@@ -3,3 +3,4 @@ venv/
 *.pyc
 *test*
 *Zone*
+*.log
