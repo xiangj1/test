@@ -178,8 +178,11 @@ class MinimaxAgent(MultiAgentSearchAgent):
 
       nextActions = state.getLegalActions(agentIndex)
       
-      if(depth == 0 or state.isWin() or state.isLose() or len(nextActions) == 0):
+      if(state.isWin() or state.isLose() or len(nextActions) == 0):
         return (bestScore, bestAction)
+
+      if(depth == 0):
+        return (self.evaluationFunction(state), bestAction)
 
       func = max if agentIndex == 0 else min
       depth += 1 if agentIndex == 0 else 0
