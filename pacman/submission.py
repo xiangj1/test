@@ -1,6 +1,5 @@
 from audioop import minmax
 from cgitb import small
-import time
 from util import manhattanDistance
 from game import Directions
 import random, util
@@ -267,7 +266,36 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
     """
 
     # BEGIN_YOUR_CODE (our solution is 20 lines of code, but don't worry if you deviate from this)
-    raise Exception("Not implemented yet")
+    def bigger(a, b):
+      return a > b
+    def smaller(a, b):
+      return a < b
+
+    def minMax(state: GameState, depth: int, agentIndex: int):
+      agentIndex = agentIndex % state.getNumAgents()
+      depth -= 1 if agentIndex == 0 else 0
+      nextActions = state.getLegalActions(agentIndex)
+
+      if(depth == 0 or state.isWin() or state.isLose() or len(nextActions) == 0):
+        return state.getScore(), None
+
+      bestScore, bestAction = float('-inf' if agentIndex == 0 else 'inf'), None
+      func = smaller if agentIndex == 0 else bigger
+
+      scores = []
+      for action in nextActions:
+        score, _ = minMax(state.generateSuccessor(agentIndex, action), depth, agentIndex+1)
+        scores.append((score, action))
+        if(func(bestScore, score)):
+          bestScore, bestAction = score, action
+      
+      if(agentIndex != 0):
+        return random.choice(scores)
+
+      return bestScore, bestAction
+      
+    score, action = minMax(gameState, self.depth+1, self.index)
+    return action
     # END_YOUR_CODE
 
 ######################################################################################
