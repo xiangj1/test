@@ -1,5 +1,6 @@
 from audioop import minmax
 from cgitb import small
+import time
 from util import manhattanDistance
 from game import Directions
 import random, util
@@ -177,7 +178,7 @@ class MinimaxAgent(MultiAgentSearchAgent):
     def smaller(a, b):
       return a < b
 
-    def minMax(state, depth, agentIndex):
+    def minMax(state: GameState, depth: int, agentIndex: int):
       agentIndex = agentIndex % state.getNumAgents()
       depth -= 1 if agentIndex == 0 else 0
       nextActions = state.getLegalActions(agentIndex)
@@ -215,7 +216,39 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
     """
 
     # BEGIN_YOUR_CODE (our solution is 36 lines of code, but don't worry if you deviate from this)
+    def bigger(a, b):
+      return a > b
+    def smaller(a, b):
+      return a < b
+
+    def minMaxAB(state: GameState, depth: int, agentIndex: int, alpha: int, beta: int):
+      agentIndex = agentIndex % state.getNumAgents()
+      depth -= 1 if agentIndex == 0 else 0
+      nextActions = state.getLegalActions(agentIndex)
+
+      if(depth == 0 or state.isWin() or state.isLose() or len(nextActions) == 0):
+        return state.getScore(), None
+
+      bestScore, bestAction = float('-inf' if agentIndex == 0 else 'inf'), None
+      func = smaller if agentIndex == 0 else bigger
+
+      for action in nextActions:
+        score, _ = minMaxAB(state.generateSuccessor(agentIndex, action), depth, agentIndex+1, alpha, beta)
+        
+        if(agentIndex == 0):
+          alpha = max(alpha, score)
+        else:
+          beta = min(beta, score)
+
+        if(func(bestScore, score)):
+          bestScore, bestAction = score, action
+        if beta <= alpha:
+          break
+      
+      return bestScore, bestAction
     
+    score, action = minMaxAB(gameState, self.depth+1, self.index, float('-inf'), float('+inf'))
+    return action
     # END_YOUR_CODE
 
 ######################################################################################
