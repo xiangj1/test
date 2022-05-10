@@ -1,4 +1,5 @@
 from audioop import minmax
+from cgitb import small
 from util import manhattanDistance
 from game import Directions
 import random, util
@@ -170,33 +171,32 @@ class MinimaxAgent(MultiAgentSearchAgent):
 
     # BEGIN_YOUR_CODE (our solution is 20 lines of code, but don't worry if you deviate from this)
     
-    def minMax(state: GameState, depth: int, agentIndex: int):
+    ######################################
+    def bigger(a, b):
+      return a > b
+    def smaller(a, b):
+      return a < b
+
+    def minMax(state, depth, agentIndex):
       agentIndex = agentIndex % state.getNumAgents()
-      
-      score = bestScore = state.getScore()
-      bestAction = Directions.STOP
-
+      depth -= 1 if agentIndex == 0 else 0
       nextActions = state.getLegalActions(agentIndex)
-      
-      if(state.isWin() or state.isLose() or len(nextActions) == 0):
-        return (bestScore, bestAction)
 
-      if(depth == 0):
-        return (self.evaluationFunction(state), bestAction)
+      if(depth == 0 or state.isWin() or state.isLose() or len(nextActions) == 0):
+        return state.getScore(), None
 
-      func = max if agentIndex == 0 else min
-      depth += 1 if agentIndex == 0 else 0
+      bestScore, bestAction = float('-inf' if agentIndex == 0 else 'inf'), None
+      func = smaller if agentIndex == 0 else bigger
 
       for action in nextActions:
-        score = func(score, minMax(state.generateSuccessor(agentIndex, action), depth-1,  agentIndex+1)[0])
-        if(bestScore != score):
-          bestScore = score
-          bestAction = action
-          
-      return (score, action)
+        score, _ = minMax(state.generateSuccessor(agentIndex, action), depth, agentIndex+1)
+        if(func(bestScore, score)):
+          bestScore, bestAction = score, action
       
-    return minMax(gameState, self.depth, 0)[1]
-
+      return bestScore, bestAction
+      
+    score, action = minMax(gameState, self.depth+1, self.index)
+    return action
     # END_YOUR_CODE
 
 ######################################################################################
@@ -215,7 +215,7 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
     """
 
     # BEGIN_YOUR_CODE (our solution is 36 lines of code, but don't worry if you deviate from this)
-    raise Exception("Not implemented yet")
+    
     # END_YOUR_CODE
 
 ######################################################################################
