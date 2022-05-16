@@ -505,7 +505,14 @@ class SchedulingCSPConstructor:
         # Hint: To check which quarters are specified by a request variable
         #       named `request`, use request.quarters (NOT self.profile.quarters).
         # BEGIN_YOUR_CODE (our solution is 5 lines of code, but don't worry if you deviate from this)
-        raise Exception("Not implemented yet")
+        for request in self.profile.requests:
+            if(len(request.quarters) == 0):
+                continue
+
+            for quarter in self.profile.quarters:
+                if(quarter not in request.quarters):
+                    csp.add_unary_factor((request, quarter), lambda cid: cid == None)
+        return
         # END_YOUR_CODE
 
     def add_request_weights(self, csp: CSP) -> None:
@@ -610,7 +617,21 @@ class SchedulingCSPConstructor:
         #                       ...
         #               ...
         # BEGIN_YOUR_CODE (our solution is 20 lines of code, but don't worry if you deviate from this)
-        raise Exception("Not implemented yet")
+        for quarter in self.profile.quarters:
+            variables = []
+            for request in self.profile.requests:
+                for cid in request.cids:
+                    course = self.bulletin.courses[cid]
+                    domains = [0] + list(range(course.minUnits, course.maxUnits+1))
+                    variable = (cid, quarter)
+                    
+                    csp.add_variable(variable, domains)
+                    csp.add_binary_factor((request, quarter), variable, lambda request_cid, unit: unit > 0 if (request_cid == cid) else unit == 0)
+                    
+                    variables.append(variable)
+            units = create_sum_variable(csp, f'{quarter}: ', variables, self.profile.maxUnits)
+            csp.add_unary_factor(units, lambda units: self.profile.minUnits <= units <= self.profile.maxUnits)
+        return
         # END_YOUR_CODE
 
     def add_all_additional_constraints(self, csp: CSP) -> None:
