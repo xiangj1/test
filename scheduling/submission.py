@@ -300,9 +300,9 @@ class BacktrackingSearch:
 
         if not self.mcv:
             # Select a variable without any heuristics.
-            for var in self.csp.variables:
-                if var not in assignment:
-                    return var
+            for variable in self.csp.variables:
+                if variable not in assignment:
+                    return variable
         else:
             # Problem 1b
             # Heuristic: most constrained variable (MCV)
@@ -314,7 +314,18 @@ class BacktrackingSearch:
             #       to satisfy all constraints.
             # Hint: for ties, choose the variable with lowest index in self.csp.variables
             # BEGIN_YOUR_CODE (our solution is 13 lines of code, but don't worry if you deviate from this)
-            raise Exception("Not implemented yet")
+            leastCount, minConsistentVariable = float("inf"), self.csp.variables[0]
+
+            for variable in self.csp.variables:
+                if(variable in assignment):
+                    continue
+                
+                consistantCount = sum([self.get_delta_weight(assignment, variable, domain) for domain in self.domains[variable]])
+                if consistantCount < leastCount:
+                    leastCount = consistantCount
+                    minConsistentVariable = variable
+                    
+            return minConsistentVariable
             # END_YOUR_CODE
 
     def apply_arc_consistency(self, var) -> None:
