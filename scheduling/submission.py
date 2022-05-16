@@ -37,7 +37,9 @@ def create_chain_csp(n: int) -> CSP:
     csp = CSP()
     # Problem 0c
     # BEGIN_YOUR_CODE (our solution is 4 lines of code, but don't worry if you deviate from this)
-    raise Exception("Not implemented yet")
+    for i, variable in enumerate(variables):
+        csp.add_variable(variable, [0, 1])
+        if(i): csp.add_binary_factor(variables[i-1], variable, lambda v1, v2: v1 != v2)
     # END_YOUR_CODE
     return csp
 
@@ -67,7 +69,20 @@ def create_nqueens_csp(n: int = 8) -> CSP:
     csp = CSP()
     # Problem 1a
     # BEGIN_YOUR_CODE (our solution is 7 lines of code, but don't worry if you deviate from this)
-    raise Exception("Not implemented yet")
+    variables = [f'X{i}' for i in range(1, n+1)]
+
+    for i, variable in enumerate(variables):
+        domain = []
+        for j in range(n):
+            domain.append((i, j))
+        csp.add_variable(variable, domain)
+    
+    for i in range(n):
+        for j in range(i+1, n):
+            csp.add_binary_factor(variables[i], variables[j], lambda v1, v2: v1[0] != v2[0])
+            csp.add_binary_factor(variables[i], variables[j], lambda v1, v2: v1[1] != v2[1])
+            csp.add_binary_factor(variables[i], variables[j], lambda v1, v2: v1[0] - v1[1] != v2[0] - v2[1]) 
+            csp.add_binary_factor(variables[i], variables[j], lambda v1, v2: v1[0] + v1[1] != v2[0] + v2[1])
     # END_YOUR_CODE
     return csp
 
