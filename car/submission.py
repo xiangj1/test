@@ -56,9 +56,9 @@ class ExactInference(object):
             for col in range(self.belief.getNumCols()):
                 x, y = util.colToX(col), util.rowToY(row)
                 distance = math.sqrt(math.pow(x-agentX, 2) + math.pow(y-agentY, 2))
-                emissionProbabiliy = util.pdf(distance, Const.SONAR_STD, observedDist)
+                emissionProbability = util.pdf(distance, Const.SONAR_STD, observedDist)
                 probability = self.belief.getProb(row, col)
-                self.belief.setProb(row, col, probability * emissionProbabiliy)
+                self.belief.setProb(row, col, probability * emissionProbability)
         self.belief.normalize()
         return 
         # END_YOUR_CODE
