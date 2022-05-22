@@ -58,6 +58,7 @@ class ExactInference(object):
                 distance = math.sqrt(math.pow(x-agentX, 2) + math.pow(y-agentY, 2))
                 emissionProbability = util.pdf(distance, Const.SONAR_STD, observedDist)
                 probability = self.belief.getProb(row, col)
+
                 self.belief.setProb(row, col, probability * emissionProbability)
         self.belief.normalize()
         return 
@@ -87,7 +88,20 @@ class ExactInference(object):
         if self.skipElapse: ### ONLY FOR THE GRADER TO USE IN Problem 1
             return
         # BEGIN_YOUR_CODE (our solution is 7 lines of code, but don't worry if you deviate from this)
-        raise Exception("Not implemented yet")
+        belief = util.Belief(self.belief.getNumRows(), self.belief.getNumCols(), value=0.)
+        for key in self.transProb:
+            transitionProbability = self.transProb[key]
+            if(transitionProbability == 0):
+                continue
+
+            (oldRow, oldCol), (newRow, newCol) = key
+            probability = self.belief.getProb(oldRow, oldCol)
+            emissionProbability = probability * transitionProbability
+            belief.addProb(newRow, newCol, emissionProbability)
+        
+        self.belief = belief
+        self.belief.normalize()
+        return
         # END_YOUR_CODE
 
     # Function: Get Belief
