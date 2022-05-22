@@ -52,7 +52,15 @@ class ExactInference(object):
 
     def observe(self, agentX: int, agentY: int, observedDist: float) -> None:
         # BEGIN_YOUR_CODE (our solution is 7 lines of code, but don't worry if you deviate from this)
-        raise Exception("Not implemented yet")
+        for row in range(self.belief.getNumRows()):
+            for col in range(self.belief.getNumCols()):
+                x, y = util.colToX(col), util.rowToY(row)
+                distance = math.sqrt(math.pow(x-agentX, 2) + math.pow(y-agentY, 2))
+                emissionProbabiliy = util.pdf(distance, Const.SONAR_STD, observedDist)
+                probability = self.belief.getProb(row, col)
+                self.belief.setProb(row, col, probability * emissionProbabiliy)
+        self.belief.normalize()
+        return 
         # END_YOUR_CODE
 
     ##################################################################################
