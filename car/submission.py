@@ -7,6 +7,7 @@ Chris Piech (piech@cs.stanford.edu). It was inspired by the Pacman projects.
 import collections
 import math
 import random
+from secrets import choice
 import util
 from engine.const import Const
 from util import Belief
@@ -203,7 +204,22 @@ class ParticleFilter(object):
     ##################################################################################
     def observe(self, agentX: int, agentY: int, observedDist: float) -> None:
         # BEGIN_YOUR_CODE (our solution is 14 lines of code, but don't worry if you deviate from this)
-        raise Exception("Not implemented yet")
+        newParticles = dict()
+
+        for tile in self.particles:
+            row, col = tile 
+            particle = self.particles[tile]
+            x, y = util.colToX(col), util.rowToY(row)
+            distance = math.sqrt(math.pow(x-agentX, 2) + math.pow(y-agentY, 2))
+            emissionProbability = util.pdf(distance, Const.SONAR_STD, observedDist)
+            newParticles[tile] = particle * emissionProbability
+
+        self.particles = dict()
+        for _ in range(self.NUM_PARTICLES):
+            tile = util.weightedRandomChoice(newParticles)
+            if(self.particles.get(tile) == None):
+                self.particles[tile] = 0
+            self.particles[tile] += 1
         # END_YOUR_CODE
 
         self.updateBelief()
@@ -232,8 +248,24 @@ class ParticleFilter(object):
     # - You should NOT call self.updateBelief() at the end of this function.
     ##################################################################################
     def elapseTime(self) -> None:
-        # BEGIN_YOUR_CODE (our solution is 6 lines of code, but don't worry if you deviate from this)
-        raise Exception("Not implemented yet")
+        # BEGIN_YOUR_CODE (our solution is 6 lines of code, but don't worry if you deviate from this)        
+        newParticles = collections.defaultdict(int)
+        for tile in self.particles:
+            # if(tile not in newParticles):
+            #     newParticles[tile] = 0
+
+            if(tile not in self.transProbDict):
+                continue
+            particle = self.particles[tile]
+            for _ in range(particle):
+                choice = util.weightedRandomChoice(self.transProbDict[tile])
+                
+                if(choice not in newParticles):
+                    newParticles[choice] = 0
+                newParticles[choice] += 1
+        
+        self.particles = newParticles
+        return
         # END_YOUR_CODE
 
     # Function: Get Belief
